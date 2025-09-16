@@ -1,115 +1,100 @@
-"# Vehicle Shift Estimation (CPU vs GPU)-"
-This project estimates the 2D position (cumulative image-plane translation) of a tracked vehicle across video frames using feature matching and RANSAC-based affine estimation. It provides a CPU and GPU pipeline for performance comparison, trajectory visualization, and overlay outputs.
+# Vehicle Shift Estimation (CPU vs GPU) 🚗
+This project estimates the 2D position (cumulative image-plane translation) of a tracked vehicle across video frames. It uses feature matching with the ORB algorithm and RANSAC-based affine estimation to determine the vehicle's movement. It includes both a CPU and a GPU pipeline for performance comparison, and it provides visualizations of the trajectory and the final output.
 
-Features
-Feature Matching with ORB and RANSAC
+⚙️ Features
+Feature Matching: Utilizes ORB (Oriented FAST and Rotated BRIEF) and RANSAC for robust motion estimation.
 
-CPU pipeline: ORB + BFMatcher + cv2.estimateAffinePartial2D
+CPU Pipeline: Implements the core logic using ORB, BFMatcher, and cv2.estimateAffinePartial2D.
 
-GPU pipeline: ORB detection/matching with cv2.cuda (if CUDA-enabled OpenCV exists)
+GPU Pipeline: Leverages cv2.cuda for GPU-accelerated ORB detection and matching, requiring a CUDA-enabled OpenCV build.
 
-Per-frame shift estimation
+Per-Frame Shift Estimation:
 
-Extracts translation (dx, dy) for every frame pair
+Extracts the translation (dx, dy) for each pair of consecutive frames.
 
-Computes cumulative position (cum_x, cum_y)
+Calculates the cumulative position (cum_x, cum_y).
 
-Records number of inlier matches
+Records the number of inlier matches for each frame.
 
-Output
+Outputs:
 
-CSV logs of per-frame translations for CPU and GPU
+CSV logs of per-frame translations for both CPU and GPU.
 
-Overlay videos showing cumulative vehicle trajectory drawn on frames
+Overlay videos showing the cumulative vehicle trajectory drawn on the video frames.
 
-Performance comparison plot for CPU vs GPU runtime
+Plots comparing CPU vs. GPU runtime performance and estimated trajectories.
 
-Trajectory plot comparing CPU vs GPU estimated motion
-
-
-Dependencies
+🛠️ Dependencies
 Python 3.7+
 
 Required packages:
-
-bash
+```
 pip install numpy opencv-python matplotlib
+```
+
 GPU Requirements:
 
-A CUDA-enabled device
-OpenCV build with CUDA (cv2.cuda must be available)
+A CUDA-enabled device.
 
+An OpenCV build with CUDA support (check if cv2.cuda is available).
 
-Usage
+🚀 Usage
 Run the script from the command line:
+
+Bash
+```
 python vehicle_shift_cpu_gpu.py --input input.mov --max-frames 300 --resize-width 800
+```
 
 Arguments:
---input, -i : Path to input video file (.mov, .mp4, etc.) [required]
+--input, -i: Path to the input video file (.mov, .mp4, etc.). [required]
 
---max-frames : Maximum number of frames to process (default: 300)
+--max-frames: Maximum number of frames to process (default: 300).
 
---resize-width : Resize width for processing frames (default: 800)
+--resize-width: Resize width for processing frames (default: 800).
 
---skip-gpu : Skip GPU pipeline even if CUDA is available
+--skip-gpu: Skips the GPU pipeline, even if CUDA is available.
 
---out-plot : Path to save CPU vs GPU performance plot (default: cpu_gpu_performance.png)
+--out-plot: Path to save the CPU vs. GPU performance plot (default: cpu_gpu_performance.png).
 
---save-overlay : Save overlay videos visualizing trajectory arrows
+--save-overlay: Saves overlay videos visualizing the trajectory arrows.
 
---overlay-cpu : Output filename for CPU trajectory overlay video (default: cpu_overlay.mp4)
+--overlay-cpu: Output filename for the CPU trajectory overlay video (default: cpu_overlay.mp4).
 
---overlay-gpu : Output filename for GPU trajectory overlay video (default: gpu_overlay.mp4)
+--overlay-gpu: Output filename for the GPU trajectory overlay video (default: gpu_overlay.mp4).
 
+Example:
+Bash
+```
+python vehicle_shift_cpu_gpu.py --input highway.mov --max-frames 200 --save-overlay
+```
 
-Output Files
-After running, the following files are generated:
+📁 Output Files
+After running the script, the following files will be generated:
 
-Trajectory data
+Trajectory Data
+cpu_shifts.csv: Contains the CPU results with per-frame (dx, dy, n_inliers, cum_x, cum_y).
 
-cpu_shifts.csv — CPU results with per-frame (dx, dy, n_inliers, cum_x, cum_y)
-
-gpu_shifts.csv — GPU results (if GPU available)
+gpu_shifts.csv: Contains the GPU results (if the GPU pipeline was run).
 
 Plots
+cpu_gpu_performance.png: A plot comparing the CPU and GPU runtimes.
 
-cpu_gpu_performance.png — Runtime comparison plot
+positions.png: A plot showing the CPU vs. GPU estimated trajectory paths in the XY-plane.
 
-positions.png — CPU vs GPU trajectory paths in XY-plane
-
-Example
-python vehicle_shift_cpu_gpu.py --input highway.mov --max-frames 200 --save-overlay
-
-
-Results and Analysis
-After running the pipeline on the test video (300 frames), both the CPU and GPU implementations produced per-frame translation estimates, cumulative trajectory plots, and runtime comparisons. Below we explain the findings using the logs and output samples.
+📈 Results and Analysis
+After processing a test video of 300 frames, both the CPU and GPU implementations generated per-frame translation estimates, cumulative trajectory plots, and runtime comparisons. The findings are summarized below.
 
 Runtime Performance
-CPU pipeline: ~3.75 seconds total processing time
+CPU pipeline: ~3.75 seconds total processing time.
 
-GPU pipeline: ~4.10 seconds total processing time
+GPU pipeline: ~4.10 seconds total processing time.
 
-Although the GPU version processes feature detection and matching in parallel, it required additional data transfer between CPU and GPU memory (especially for affine estimation which still runs on CPU). For this dataset (300 frames), the GPU pipeline was slightly slower than the CPU.
-
-This indicates that GPU advantage may only become visible for larger videos, heavier frame sizes, or higher feature counts.
+Although the GPU version processes feature detection and matching in parallel, the total runtime was slightly slower than the CPU version. This is because additional time was spent on data transfer between CPU and GPU memory, particularly for the affine estimation, which is not GPU-accelerated in this implementation. This suggests that the GPU's performance advantage may become more apparent with larger videos, higher-resolution frames, or a greater number of features to track.
 
 Accuracy of Translation Estimates
-Both pipelines estimate per-frame translation (dx, dy) and cumulative position (cum_x, cum_y).
+Both pipelines estimated similar per-frame translations (dx, dy) and cumulative positions (cum_x, cum_y).
 
-CPU sample trajectory (first 10 frames):
+CPU Trajectory: The motion was gradual and consistent, with 800–1200 inlier matches per frame, indicating stable tracking.
 
-text
-(0→1) dx=-3.84, dy=-1.59, inliers=820
-(1→2) dx=-1.73, dy=-0.73, inliers=1110
-(5→6) dx=-4.14, dy=-2.55, inliers=1042
-Cumulative after 9 frames: X=-19.34, Y=-9.46
-The motion is gradual and consistent, with 800–1200 inlier matches per frame, signifying stable tracking.
-
-GPU sample trajectory (first 10 frames):
-
-text
-(0→1) dx=-4.50, dy=-1.74, inliers=1115
-(1→2) dx=-3.56, dy=-1.92, inliers=1468
-(5→6) dx=-4.18, dy=-2.08, inliers=1348
-Cumulative after 9 frames: X=-24.40, Y=-11.57
-The GPU results show slightly larger per-frame translations and higher average inlier matches (1200–1450 range). This suggests GPU ORB detected more features, leading to slightly different motion estimates, but still consistent with overall motion direction.
+GPU Trajectory: The GPU results showed slightly larger per-frame translations and a higher average number of inlier matches (1200–1450 range). This suggests that the GPU-accelerated ORB detected more features, leading to slightly different, but still consistent, motion estimates.
