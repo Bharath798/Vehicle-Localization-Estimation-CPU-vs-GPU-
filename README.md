@@ -72,5 +72,8 @@ Accuracy of Translation Estimates
 Both pipelines estimated similar per-frame translations (dx, dy) and cumulative positions (cum_x, cum_y).
 * CPU Trajectory: The motion was gradual and consistent, with 800–1200 inlier matches per frame, indicating stable tracking.
 * GPU Trajectory: The GPU results showed slightly larger per-frame translations and a higher average number of inlier matches (1200–1450 range). This suggests that the GPU-accelerated ORB detected more features, leading to slightly different, but still consistent, motion estimates.
+
+CPU and GPU Performance
 <img width="1000" height="500" alt="cpu_gpu_performance" src="https://github.com/user-attachments/assets/9c81b9bf-3368-4d92-a258-553a4026a333" />
+Position estimation comparison between CPU and GPU
 <img width="800" height="800" alt="positions" src="https://github.com/user-attachments/assets/6cf42290-02c3-41c0-af22-16750773e4d3" />
